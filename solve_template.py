@@ -22,4 +22,5 @@ def main():
         submit(p2, part="b", day=DAY, year=YEAR)
 
 
-main()
+if __name__ == "__main__":
+    main()

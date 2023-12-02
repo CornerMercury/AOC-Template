@@ -104,7 +104,7 @@ def main():
                 output_times(results)
                 print("Worst days")
                 print("‾‾‾‾‾‾‾‾‾‾")
-                worst_times = sorted(results, key=lambda x: x[0] + x[1], reverse=True)[
+                worst_times = sorted(results, key=lambda x: x[1] + x[2], reverse=True)[
                     :3
                 ]
                 output_times(worst_times)

@@ -2,22 +2,23 @@ from aocd import get_data, submit
 
 DAY = 1
 YEAR = 2023
-data = get_data(day=DAY, year=YEAR)
 
 
-def part1():
+def part1(l):
     return None
 
 
-def part2():
+def part2(l):
     return None
 
 
 def main():
-    p1 = part1()
+    data = get_data(day=DAY, year=YEAR)
+    lst = data.split("\n")
+    p1 = part1(lst)
     if p1:
         submit(p1, part="a", day=DAY, year=YEAR)
-    p2 = part2()
+    p2 = part2(lst)
     if p2:
         submit(p2, part="b", day=DAY, year=YEAR)
 

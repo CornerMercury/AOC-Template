@@ -5,6 +5,7 @@ from aocd import get_data, exceptions
 
 YEAR = 2023
 
+data_lookup = {}
 
 def get_day():
     day = "0"
@@ -29,9 +30,14 @@ def get_filename(days=[i for i in range(1, 26)]):
     return name
 
 
-def time_single(path, n=100):
+def time_single(path, n=1):
     file = import_module(path)
-    data = get_data(day=int(path.split(".")[-2][-2:]), year=YEAR)
+    day = int(path.split(".")[-2][-2:])
+    if day in data_lookup:
+        data = data_lookup[day]
+    else:
+        data = get_data(day=day, year=YEAR)
+        data_lookup[day] = data
 
     dt1 = dt2 = 0
     for _ in range(n):

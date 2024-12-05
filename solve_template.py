@@ -1,7 +1,6 @@
 from aocd import get_data, submit
 
-YEAR = 2023
-
+YEAR = 2024
 
 def part1(data):
     l = data.split("\n")

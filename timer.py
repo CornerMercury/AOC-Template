@@ -2,42 +2,14 @@ from time import perf_counter_ns as timer
 from os import path, system
 from importlib import import_module
 from aocd import get_data, exceptions
+import argparse
 
-YEAR = 2023
+YEAR = 2024
 
-data_lookup = {}
-
-def get_day():
-    day = "0"
-    while not (day.isnumeric()) or not (1 <= int(day) <= 25):
-        day = input("Enter day: ")
-
-    return int(day)
-
-
-def get_filename(days=[i for i in range(1, 26)]):
-    name = "_"
-    while name not in " ." and not any(
-        path.exists(f"day{day:02}/{name}.py") for day in days
-    ):
-        name = input("Enter filename (without extension): ")
-
-    if not all(path.exists(f"day{day:02}/{name}.py") for day in days):
-        choice = input("Not all days have that file, continue (y/n)? ")[0].lower()
-        if choice != "y":
-            name = get_filename(days)
-
-    return name
-
-
-def time_single(path, n=1):
+def time_single(path, n):
     file = import_module(path)
     day = int(path.split(".")[-2][-2:])
-    if day in data_lookup:
-        data = data_lookup[day]
-    else:
-        data = get_data(day=day, year=YEAR)
-        data_lookup[day] = data
+    data = get_data(day=day, year=YEAR)
 
     dt1 = dt2 = 0
     for _ in range(n):
@@ -78,57 +50,60 @@ def output_times(lst, first_header="day"):
 
 
 def main():
-    inp = ""
-    while inp != "q":
-        inp = input("Time all, time single, compare times or quit (a/s/c/q): ")[
-            0
-        ].lower()
-        match inp:
-            case "s":
-                day = get_day()
-                path = f"day{day:02}.{get_filename([day])}"
-                try:
-                    dt1, dt2 = time_single(path)
-                    output_times([(str(day), dt1, dt2)])
-                except exceptions.PuzzleLockedError:
-                    print(f"Day {day} is locked")
+    parser = argparse.ArgumentParser(description="Handle script arguments.")
+    parser.add_argument("singleDefault", nargs="*", metavar=("DAY", "FILENAME"), help="Time a specific day and file.", default=None)
+    parser.add_argument("-a", "--all", metavar="FILENAME", nargs="?", const="",
+                        help="Time all days for a given filename.")
+    parser.add_argument("-s", "--single", nargs=2, metavar=("DAY", "FILENAME"), 
+                        help="Time a specific day and file.")
+    parser.add_argument("-c", "--compare", nargs=3, metavar=("DAY", "FILENAME1", "FILENAME2"), 
+                        help="Compare two files for a specific day.")
+    parser.add_argument("-n", type=int, default=1, help="Number of iterations (default: 1).")
+    
+    args = parser.parse_args()
+    n = args.n
+    if args.single or args.singleDefault:
+        day, filename = args.single if args.single else args.singleDefault
+        path = f"day{int(day):02}.{filename}"
+        try:
+            dt1, dt2 = time_single(path, n)
+            output_times([(str(day), dt1, dt2)])
+        except exceptions.PuzzleLockedError:
+            print(f"Day {day} is locked")
 
-            case "a":
-                filename = get_filename()
-                results = []
-                for day in range(1, 26):
-                    system("cls")
-                    print(f"|{'█' * day}{' ' * (25 - day)}| {day*4}%")
-                    try:
-                        times = time_single(f"day{day:02}.{filename}")
-                    except ModuleNotFoundError:
-                        continue
-                    except exceptions.PuzzleLockedError:
-                        continue
-                    results.append((str(day), *times))
+    elif args.all:
+        filename = args.all
+        results = []
+        for day in range(1, 26):
+            system("cls")
+            print(f"|{'█' * day}{' ' * (25 - day)}| {day*4}%")
+            try:
+                times = time_single(f"day{day:02}.{filename}", n)
+            except ModuleNotFoundError:
+                continue
+            except exceptions.PuzzleLockedError:
+                continue
+            results.append((str(day), *times))
 
-                output_times(results)
-                print("Worst days")
-                print("‾‾‾‾‾‾‾‾‾‾")
-                worst_times = sorted(results, key=lambda x: x[1] + x[2], reverse=True)[
-                    :3
-                ]
-                output_times(worst_times)
-            case "c":
-                day = get_day()
-                f1 = get_filename([day])
-                print("Successfully added file")
-                f2 = get_filename([day])
-                try:
-                    t1 = time_single(f"day{day:02}.{f1}")
-                    t2 = time_single(f"day{day:02}.{f1}")
-                    output_times([(f1, *t1), (f2, *t2)], first_header="filename")
-                    percent = (sum(t1) / sum(t2)) * 100 - 100
-                    print(
-                        f"{f2} is {abs(percent):.2f}% {'faster' if percent > 0 else 'slower'}"
-                    )
-                except exceptions.PuzzleLockedError:
-                    print(f"Day {day} is locked")
+        output_times(results)
+        print("Worst days")
+        print("‾‾‾‾‾‾‾‾‾‾")
+        worst_times = sorted(results, key=lambda x: x[1] + x[2], reverse=True)[
+            :3
+        ]
+        output_times(worst_times)
+    elif args.compare:
+        day, f1, f2 = args.compare
+        try:
+            t1 = time_single(f"day{day:02}.{f1}", n)
+            t2 = time_single(f"day{day:02}.{f1}", n)
+            output_times([(f1, *t1), (f2, *t2)], first_header="filename")
+            percent = (sum(t1) / sum(t2)) * 100 - 100
+            print(
+                f"{f2} is {abs(percent):.2f}% {'faster' if percent > 0 else 'slower'}"
+            )
+        except exceptions.PuzzleLockedError:
+            print(f"Day {day} is locked")
 
 
 if __name__ == "__main__":

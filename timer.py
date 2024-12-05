@@ -3,8 +3,7 @@ from os import path, system
 from importlib import import_module
 from aocd import get_data, exceptions
 import argparse
-
-YEAR = 2024
+from year import YEAR
 
 def time_single(path, n):
     file = import_module(path)
